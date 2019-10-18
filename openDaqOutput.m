@@ -14,7 +14,7 @@ function objDAQOut = openDaqOutput(intUseDevice)
 	objDAQOut = daq.createSession(objDevice(intUseDevice).Vendor.ID);
 	
 	%set variables
-	objDAQOut.IsContinuous = true;
+	objDAQOut.IsContinuous = false;
 	objDAQOut.Rate=1000; %1ms precision
 	
 	%add IR LED output channels
@@ -22,7 +22,7 @@ function objDAQOut = openDaqOutput(intUseDevice)
 	[chOut2,dblIdx2] = addAnalogOutputChannel(objDAQOut, strID, 'ao1', 'Voltage');
 	
 	%% set LED1 off and LED2 on
-	queueOutputData(objDAQOut,repmat([0 3],[500 1]));
+	queueOutputData(objDAQOut,repmat([0 3],[100 1]));
 	startBackground(objDAQOut);
 	pause(0.1);
 %{

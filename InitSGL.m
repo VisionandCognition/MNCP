@@ -10,27 +10,35 @@ function [hSGL,strRunName,sParamsSGL] = InitSGL(strRecording,strOutputFile)
 	vecSaveChans = GetSaveChans(hSGL, 0);
 	warning('on','CalinsNetMex:connectionClosed');
 	
+	if ~IsSaving(hSGL)
+		%set run name
+		intBlock = 0;
+		boolAccepted = false;
+		while ~boolAccepted
+			intBlock = intBlock + 1;
+			strRunName = strcat(strOutputFile,sprintf('R%02d',intBlock));
+			try
+				SetRunName(hSGL, strRunName);
+				boolAccepted = true;
+			catch
+				boolAccepted = false;
+			end
+			if intBlock > 99
+				error([mfilename ':NameNotAccepted'],'Run names are not accepted... Something is wrong');
+			end
+		end
+	else
+		intBlock = 1;
+		strRunName = strcat(strOutputFile,sprintf('R%02d',intBlock));
+	end
+	
 	%set meta data, can be anything, as long as it's a numeric scalar or string
 	sMeta = struct();
-	sMeta.recording = strRecording;
+	strTime = getTime;
+	strRunName = cat(strRunName,'_',strTime);
+	strMataField = sprintf('recording_%s',strTime);
+	sMeta.(strMataField) = strRecording;
 	SetMetaData(hSGL, sMeta);
-	
-	%set run name
-	intBlock = 0;
-	boolAccepted = false;
-	while ~boolAccepted
-		intBlock = intBlock + 1;
-		strRunName = strcat(strOutputFile,sprintf('R%02d',intBlock));
-		try
-			SetRunName(hSGL, strRunName);
-			boolAccepted = true;
-		catch
-			boolAccepted = false;
-		end
-		if intBlock > 99
-			error([mfilename ':NameNotAccepted'],'Run names are not accepted... Something is wrong');
-		end
-	end
 	
 	%get parameters for this run
 	sParamsSGL = GetParams(hSGL);
@@ -43,8 +51,10 @@ function [hSGL,strRunName,sParamsSGL] = InitSGL(strRecording,strOutputFile)
 	[cellSN,vecType] = GetImProbeSN(hSGL, vecStreamIM(1));
 	sParamsSGL.cellSN = cellSN;
 	
-	%start recording
-	SetRecordingEnable(hSGL, 1);
+	%start recording if not already recording
+	if ~IsSaving(hSGL)
+		SetRecordingEnable(hSGL, 1);
+	end
 	hTicStart = tic;
 	
 	%check if output is being saved

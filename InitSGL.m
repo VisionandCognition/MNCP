@@ -36,8 +36,8 @@ function [hSGL,strRunName,sParamsSGL] = InitSGL(strRecording,strOutputFile)
 	sMeta = struct();
 	strTime = strrep(getTime,':','_');
 	strRunName = strcat(strRunName,'_',strTime);
-	strMataField = sprintf('recording_%s',strTime);
-	sMeta.(strMataField) = strRecording;
+	strMetaField = sprintf('recording_%s',strTime);
+	sMeta.(strMetaField) = strRecording;
 	SetMetaData(hSGL, sMeta);
 	
 	%get parameters for this run

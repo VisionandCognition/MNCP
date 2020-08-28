@@ -1,4 +1,4 @@
-function objDAQOut = openDaqOutputSpritzer(intUseDevice,dblSampRate)
+function objDAQOut = openDaqOutputOptoSpritzer(intUseDevice,dblSampRate)
 	%% process input
 	if ~exist('intUseDevice','var') || isempty(intUseDevice)
 		intUseDevice = 1;

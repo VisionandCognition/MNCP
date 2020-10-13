@@ -1,4 +1,4 @@
-function objDAQIn = openDaqInput(intUseDevice,strDataOutFile)
+function objDAQIn = openDaqInput(intUseDevice,strDataOutFile,cellChannels,dblRate)
 	%% set handle
 	global ptrPhotoDiodeFile;
 	
@@ -9,6 +9,13 @@ function objDAQIn = openDaqInput(intUseDevice,strDataOutFile)
 	if ~exist('strDataOutFile','var') || isempty(strDataOutFile)
 		strDataOutFile = ['D:\PhotoDiodeData\PDD' getDate '_' strrep(getTime,':','-') '.csv'];
 	end
+	if ~exist('cellChannels','var')
+		cellChannels = {'ai0'};
+	end
+	if ~exist('dblRate','var')
+		dblRate = 1000;
+	end
+	
 	%% setup connection
 	%query connected devices
 	objDevice = daq.getDevices;
@@ -20,10 +27,12 @@ function objDAQIn = openDaqInput(intUseDevice,strDataOutFile)
 	
 	%set variables
 	objDAQIn.IsContinuous = true;
-	objDAQIn.Rate=1000; %1ms precision
+	objDAQIn.Rate=dblRate; %1ms precision
 	
 	%% add screen photodiode input
-	addAnalogInputChannel(objDAQIn,strID,'ai0','Voltage');
+	for intChannel=1:numel(cellChannels)
+		addAnalogInputChannel(objDAQIn,strID,cellChannels{intChannel},'Voltage');
+	end
 	hListener = addlistener(objDAQIn,'DataAvailable',@fPhotoDiodeCallback);
 	
 	%% open file

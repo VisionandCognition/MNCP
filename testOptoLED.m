@@ -3,7 +3,7 @@ intUseDaqDevice = 1;
 
 %% open
 dblSampRate = 10000;
-objDAQOut = openDaqOutputSpritzer(intUseDaqDevice,dblSampRate);
+objDAQOut = openDaqOutputOptoSpritzer(intUseDaqDevice,dblSampRate);
 
 %% prepare
 dblV1 = 0;
@@ -23,9 +23,8 @@ vecOn = dblV2*ones(round(dblSampRate/(dblHz*2)),1);
 vecStim = repmat(cat(1,vecOff,vecOn),[dblStimReps 1]);
 outputData1 = cat(1,vecStim,vecOff);
 
-
 stop(objDAQOut);
-queueOutputData(objDAQOut,[0*outputData1 outputData1]);
+queueOutputData(objDAQOut,[outputData1 outputData1]);
 prepare(objDAQOut);
 
 %wait & send

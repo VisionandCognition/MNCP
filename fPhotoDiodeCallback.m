@@ -15,10 +15,11 @@ function fPhotoDiodeCallback(objDAQ,objData)
 	%strFields='"TriggerTime";"TimeStamp";"Data"';
 	
 	%write output
+	strSaveRes = ['%.' num2str(ceil(log10(objDAQ.Rate))) 'f'];
 	if ~isempty(vecData)
 		vecWriteLines = [1 find(abs(diff(vecSelectData(:)))'>0.1)+1] ;
 		for intLine=vecWriteLines
-			strWrite = strcat(strTriggerTime,';',sprintf('%.3f',vecTimeStamps(intLine)),';',sprintf('%.3e',vecData(intLine)),'\n');
+			strWrite = strcat(strTriggerTime,';',sprintf(strSaveRes,vecTimeStamps(intLine)),';',sprintf('%.3e',vecData(intLine)),'\n');
 			fprintf(ptrPhotoDiodeFile,strWrite);
 		end
 	end

@@ -1,17 +1,21 @@
-
-% Create connection (edit the IP address)
+%% Create connection ======================================================
+% Check the IP address in SpikeGLX console if necessary
+% Command Server Setting 
 hSGL = SpikeGL('127.0.0.1');
 
-%retrieve channels to save
+%% Retrieve channels to save ==============================================
 warning('off','CalinsNetMex:connectionClosed');
 vecSaveChans = GetSaveChans(hSGL, 0);
 warning('on','CalinsNetMex:connectionClosed');
 
-%set meta data, can be anything, as long as it's a numeric scalar or string
+%% Set meta data ==========================================================
+% This can be anything, as long as it's a numeric scalar or string
+% add as required
 sMeta = struct();
 sMeta.animal = 'DefaultAnimal';
 SetMetaData(hSGL, sMeta);
 
+%% Configure run ==========================================================
 %set run name
 intBlock = 0;
 boolAccepted = false;
@@ -82,7 +86,7 @@ intBufferN_NI = round(dblBufferT_NI*(dblSampRateNI/intDownsampleNI)); %buffer si
 dblBufferSampNI = intBufferN_NI/dblBufferT_NI; %resultant buffer sampling rate
 vecFetchChansNI = [0 1]; %photodiode (0) and sync pulse (1)
 	
-%% loop
+%% Recording loop =========================================================
 %pre-allocate IM
 intBuffChansIM = numel(vecFetchChansIM);
 intBuffPosIM = 0;
@@ -102,15 +106,18 @@ while toc(hTicStart) < 10
 	
 	%% get IMEC probe data; single iter takes ~1ms
 	% get current scan number for IMEC probe
-	intCurCountIM = str2double(DoFastQueryCmd(hSGL, strStreamIM)); %this is faster than "GetScanCount(hSGL, vecStreamIM(1));"
+	intCurCountIM = str2double(DoFastQueryCmd(hSGL, strStreamIM)); 
+    %this is faster than "GetScanCount(hSGL, vecStreamIM(1));"
 	
 	%retrieve Neuropixels data
-	intRetrieveSamplesIM = intCurCountIM - intLastFetchIM; %retrieve as many samples as acquired between previous fetch and now
+	intRetrieveSamplesIM = intCurCountIM - intLastFetchIM; 
+    %retrieve as many samples as acquired between previous fetch and now
 	if intRetrieveSamplesIM > 0
 		try
 			%fetch "intRetrieveSamplesIM" samples starting at
 			%"intFetchStartCountIM"; FastFatch is optimized version
-			[matDataIM,intStartCountIM] = FastFetch(hSGL, vecStreamIM(1), intLastFetchIM, intRetrieveSamplesIM, vecFetchChansIM, intDownsampleIM);
+			[matDataIM,intStartCountIM] = FastFetch(hSGL, vecStreamIM(1), ...
+                intLastFetchIM, intRetrieveSamplesIM, vecFetchChansIM, intDownsampleIM);
 		catch ME
 			%buffer has likely already been cleared; unable to fetch data
 			ME
@@ -119,10 +126,12 @@ while toc(hTicStart) < 10
 		%process data outside try-catch (slightly faster)
 		if ~isempty(matDataIM)
 			%assign data
-			vecUsePosIM = modx((intBuffPosIM+1):(intBuffPosIM+ceil(intRetrieveSamplesIM/intDownsampleIM)),intBufferN_IM);
+			vecUsePosIM = modx((intBuffPosIM+1):(intBuffPosIM+...
+                ceil(intRetrieveSamplesIM/intDownsampleIM)),intBufferN_IM);
 			intBuffPosIM = vecUsePosIM(end);
 			matAggDataIM(vecUsePosIM,:) = matDataIM;
-			vecTimeIM(vecUsePosIM) = ((intLastFetchIM+1):intDownsampleIM:intCurCountIM)/dblSampRateIM;
+			vecTimeIM(vecUsePosIM) = ...
+                ((intLastFetchIM+1):intDownsampleIM:intCurCountIM)/dblSampRateIM;
 			
 			%update last fetch
 			intLastFetchIM = intCurCountIM;
@@ -132,15 +141,18 @@ while toc(hTicStart) < 10
 	
 	%% get NI I/O box data, single iter takes ~0.5ms
 	%get current scan number for NI streams
-	intCurCountNI = str2double(DoFastQueryCmd(hSGL, strStreamNI));%this is faster than "GetScanCount(hSGL, intStreamNI);"
+	intCurCountNI = str2double(DoFastQueryCmd(hSGL, strStreamNI));
+    %this is faster than "GetScanCount(hSGL, intStreamNI);"
 	
 	%get NI data
-	intRetrieveSamplesNI = intCurCountNI - intLastFetchNI; %retrieve as many samples as acquired between previous fetch and now
+	intRetrieveSamplesNI = intCurCountNI - intLastFetchNI; 
+    %retrieve as many samples as acquired between previous fetch and now
 	if intRetrieveSamplesNI > 0
 		%fetch in try-catch block
 		try
 			%fetch "intRetrieveSamplesNI" samples starting at "intFetchStartCountNI"
-			[matDataNI,intStartCountNI] = FastFetch(hSGL, intStreamNI, intLastFetchNI, intRetrieveSamplesNI, vecFetchChansNI, intDownsampleNI);
+			[matDataNI,intStartCountNI] = FastFetch(hSGL, intStreamNI, ...
+                intLastFetchNI, intRetrieveSamplesNI, vecFetchChansNI, intDownsampleNI);
 		catch ME
 			%buffer has likely already been cleared; unable to fetch data
 			ME
@@ -149,10 +161,12 @@ while toc(hTicStart) < 10
 		%process data outside try-catch (slightly faster)
 		if ~isempty(matDataNI)
 			%assign data
-			vecUsePosNI = modx((intBuffPosNI+1):(intBuffPosNI+ceil(intRetrieveSamplesNI/intDownsampleNI)),intBufferN_NI);
+			vecUsePosNI = modx((intBuffPosNI+1):(intBuffPosNI+...
+                ceil(intRetrieveSamplesNI/intDownsampleNI)),intBufferN_NI);
 			intBuffPosNI = vecUsePosNI(end);
 			matAggDataNI(vecUsePosNI,:) = matDataNI;
-			vecTimeNI(vecUsePosNI) = ((intLastFetchNI+1):intDownsampleNI:intCurCountNI)/dblSampRateNI;
+			vecTimeNI(vecUsePosNI) = ...
+                ((intLastFetchNI+1):intDownsampleNI:intCurCountNI)/dblSampRateNI;
 			
 			%update last fetch
 			intLastFetchNI = intCurCountNI;
@@ -174,17 +188,16 @@ vecTimeTic = vecTimeTic(vecTimeTic>0);
 figure;histx(vecTimeTic);xlim([0 0.01]);mean(vecTimeTic)
 sum(vecTimeTic(vecTimeTic>0.003))
 
-%% stop recording
+%% Stop recording =========================================================
 SetRecordingEnable(hSGL, 0);
 
-%% check edge synchronization; note that this is not done online!
+%% Check edge synchronization =============================================
+% Note that this is not done online!
 %IM
 vecPulseIM = zscore(double(matAggDataIM(:,end)));
 vecTimeIM = cell2mat(cellTimeIM)/dblSampRateIM;
-hold on
-plot(vecTimeIM,vecPulseIM);
+hold on; plot(vecTimeIM,vecPulseIM);
 %NI
 vecPulseNI = double(matAggDataNI(:,end));
 vecTimeNI = cell2mat(cellTimeNI)/dblSampRateNI;
-plot(vecTimeNI,zscore(vecPulseNI));
-hold off
+plot(vecTimeNI,zscore(vecPulseNI)); hold off

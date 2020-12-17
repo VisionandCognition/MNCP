@@ -9,7 +9,7 @@ warning('on','CalinsNetMex:connectionClosed');
 
 %set meta data, can be anything, as long as it's a numeric scalar or string
 sMeta = struct();
-sMeta.animal = 'Mr. Mouse';
+sMeta.animal = 'DefaultAnimal';
 SetMetaData(hSGL, sMeta);
 
 %set run name
@@ -173,6 +173,7 @@ end
 vecTimeTic = vecTimeTic(vecTimeTic>0);
 figure;histx(vecTimeTic);xlim([0 0.01]);mean(vecTimeTic)
 sum(vecTimeTic(vecTimeTic>0.003))
+
 %% stop recording
 SetRecordingEnable(hSGL, 0);
 
